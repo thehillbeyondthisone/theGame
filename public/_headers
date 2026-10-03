@@ -1,0 +1,9 @@
+# Cloudflare Pages response headers.
+/*
+  Permissions-Policy: xr-spatial-tracking=(self)
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+
+# Hashed build assets never change, so repeat visits launch from cache.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#100b14" />
+    <meta name="description" content="A gift. Put it on." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>THE GAME</title>
+  </head>
+  <body>
+    <canvas id="scene" aria-label="A red disc and violet funnel over a field of circles"></canvas>
+    <main id="landing">
+      <h1>A gift</h1>
+      <div class="actions">
+        <button id="put-on" type="button" hidden>Put it on</button>
+        <a id="open-quest" class="button" rel="noopener" hidden>Open on Meta Quest</a>
+        <button id="play-here" type="button" hidden>Play on this screen</button>
+      </div>
+      <p id="status" role="status"></p>
+      <p class="notice">
+        Photosensitivity notice: this game uses soft, slow pulses of light and never strobes. Take a break if
+        anything feels uncomfortable.
+      </p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

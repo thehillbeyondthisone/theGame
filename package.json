@@ -1,0 +1,39 @@
+{
+  "name": "the-game",
+  "private": true,
+  "version": "0.0.1",
+  "description": "An AI-assisted Quest 3 WebXR fan prototype with hands-free spatial play.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thehillbeyondthisone/theGame.git"
+  },
+  "bugs": {
+    "url": "https://github.com/thehillbeyondthisone/theGame/issues"
+  },
+  "homepage": "https://github.com/thehillbeyondthisone/theGame#readme",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:local": "vite --mode localhost",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "size": "node scripts/size.mjs",
+    "deploy": "npm run build && npm run size && npx wrangler@4 pages deploy dist --project-name the-game"
+  },
+  "dependencies": {
+    "three": "npm:super-three@0.185.0"
+  },
+  "devDependencies": {
+    "@iwer/devui": "^2.5.0",
+    "@iwer/sem": "^2.5.0",
+    "@types/three": "0.185.4",
+    "@types/webxr": "^0.5.24",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "iwer": "^2.5.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}

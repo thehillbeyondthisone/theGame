@@ -1,0 +1,23 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.wrangler/
+.vite/
+*.tsbuildinfo
+
+# Local configuration and adjacent experiments are not part of this repo.
+.env
+.env.*
+!.env.example
+.claude/
+precog/
+
+# The episode clip and decoded frames are local visual-review material. They
+# are intentionally not redistributed in the public fan-project repository.
+docs/reference/sttng-episode/videoplayback.mp4
+docs/reference/sttng-episode/frames/
+docs/reference/sttng-episode/overview.png
+docs/reference/sttng-episode/capture-sequence.png
+docs/reference/sttng-episode/manifest.json
+docs/reference/sttng-episode/compare.html
