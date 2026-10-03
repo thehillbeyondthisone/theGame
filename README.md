@@ -2,6 +2,14 @@
 
 An AI-assisted WebXR fan prototype that turns the fictional headset game from *Star Trek: The Next Generation* into a small, playable mixed-reality experiment for Meta Quest 3.
 
+[![Repository views](https://hits.sh/github.com/thehillbeyondthisone/theGame.svg?style=flat-square&label=repository%20views)](https://hits.sh/github.com/thehillbeyondthisone/theGame/)
+
+## Play it
+
+**[Launch THE GAME in your browser →](https://thehillbeyondthisone.github.io/theGame/)**
+
+The hosted build works on desktop, mobile, and Quest Browser. On Quest, open the link directly in the headset and choose **Put it on**. No install or account is required.
+
 Guide a red disc into a shifting violet funnel. On Quest, you can play hands-free by aiming with your head and leaning to adjust depth; hand tracking and controllers provide more direct alternatives. A mouse/touch version and Meta's desktop headset emulator make development possible without wearing the headset.
 
 ![Current desktop render: a red disc and violet funnel above an orange circle field](docs/reference/sttng-episode/implementation-4x3-2026-09-28.png)

@@ -9,6 +9,8 @@ export default defineConfig(({ command, mode }) => {
   const lan = mode !== 'localhost';
   const host = lan ? true : 'localhost';
   return {
+    // GitHub Pages serves this project at /theGame/. Development remains at /.
+    base: command === 'build' ? '/theGame/' : '/',
     plugins: command === 'serve' && lan ? [basicSsl()] : [],
     // precog/ is a separate app nested in this folder: keep this server from
     // crawling its index.html for dependencies or watching its files.
