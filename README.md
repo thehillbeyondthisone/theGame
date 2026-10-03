@@ -63,8 +63,6 @@ You can also use the npm scripts directly:
 
 This was built through human-directed, agent-assisted programming—not by a one-shot game generator, and there is no generative AI in the running game. The human set the concept, feel, reference target, constraints, and acceptance calls. Coding agents helped research browser/XR tradeoffs, propose architecture, implement TypeScript, write tests and documentation, and investigate failures. Every generated change still had to survive source review and the project checks; hardware and visual claims remain explicitly unverified until a person tests them.
 
-The most useful lesson so far: an emulator can validate input and application flow but cannot prove headset rendering. A real Quest exposed a multiview shader-name collision that desktop GPUs never exercised. The workaround is isolated in [`src/view/multiview-fix.ts`](src/view/multiview-fix.ts) and guarded by a regression test.
-
 Read [AI development and verification](docs/AI-DEVELOPMENT.md) for the workflow, failure boundaries, and lessons suitable for discussion on `/r/aigamedev`.
 
 ## Project map
@@ -84,7 +82,6 @@ The broader concept and milestone plan are in [PLAN.md](PLAN.md). Engineering de
 
 Run `quickstart.bat check` before submitting a change. It checks TypeScript, the Vitest suites, the production build, and compressed download budgets. Those checks cover deterministic code and build integrity; they do **not** prove visual fidelity, physical Quest behavior, Wi-Fi/firewall reachability, sustained frame rate, comfort, or fun.
 
-The private visual baseline is copyrighted episode footage supplied for local comparison. It and its decoded frames are deliberately excluded from this public repository. The public repo contains only implementation screenshots and a description of the comparison process; see [docs/visual-baseline.md](docs/visual-baseline.md).
 
 ## Contributing and license status
 
