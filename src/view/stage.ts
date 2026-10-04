@@ -29,7 +29,7 @@ export class Stage {
       multiviewStereo: true,
       powerPreference: 'high-performance',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, matchMedia('(pointer: coarse)').matches ? 1.5 : 2));
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.xr.enabled = true;
     this.renderer.xr.setReferenceSpaceType('local-floor');
@@ -46,6 +46,7 @@ export class Stage {
     this.resetCamera();
     this.setLook('desktop');
     window.addEventListener('resize', this.resize);
+    window.visualViewport?.addEventListener('resize', this.resize);
     this.resize();
   }
 
@@ -97,8 +98,9 @@ export class Stage {
   };
 
   private fitView(): void {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const canvas = this.renderer.domElement;
+    const w = Math.max(1, canvas.clientWidth || window.innerWidth);
+    const h = Math.max(1, canvas.clientHeight || window.innerHeight);
     const aspect = w / h;
     // Mid-exit, three.js restores the canvas size itself (and refuses resizes).
     if (!this.renderer.xr.isPresenting) this.renderer.setSize(w, h, false);

@@ -137,6 +137,11 @@ export class HoopView {
     this.clipAt = now;
   }
 
+  clearCapture(): void {
+    this.captureAt = this.popAt = this.flashAt = this.clipAt = -Infinity;
+    this.captureRoot.visible = false;
+  }
+
   update(hoop: Hoop, now: number): void {
     const capture = (now - this.captureAt) / 0.82;
     this.captureRoot.visible = capture >= 0 && capture < 1;

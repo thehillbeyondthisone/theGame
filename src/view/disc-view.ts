@@ -50,6 +50,11 @@ export class DiscView {
     this.captureRoot.quaternion.setFromUnitVectors(UP, new Vector3(mouthNormal.x, mouthNormal.y, mouthNormal.z));
   }
 
+  clearCapture(): void {
+    this.captureAt = -Infinity;
+    this.captureRoot.visible = false;
+  }
+
   /** Interpolate movement, then show the shallow tilt and turning face. */
   update(disc: Disc, alpha: number): void {
     const p = this.group.position;

@@ -14,14 +14,17 @@ Guide a red disc into a shifting violet funnel. On Quest, you can play hands-fre
 
 ![Current desktop render: a red disc and violet funnel above an orange circle field](docs/reference/sttng-episode/implementation-4x3-2026-09-28.png)
 
-> **Prototype status:** ten rough, repeatable levels are playable. Automated checks pass, but the latest visual pass, physical Quest retest, 90 fps target, comfort, and long-term fun are not yet accepted. This is a development build, not a finished release.
+> **Prototype status:** ten repeatable layouts, a mobile-first 60-second score run, and untimed free play are playable. Automated and emulated-touch checks pass; physical phone/Quest feel, sustained performance, comfort, and long-term fun still need human playtesting. This is a development build, not a finished release.
 
 ## What is playable
 
 - **Mind mode:** hold your gaze near the funnel mouth to draw the disc forward; lean to adjust depth.
 - **Hand tracking:** open-palm pull, pinch-and-release throw, and palm shove.
 - **Controllers:** trigger tractor beam, stick depth control, throws, and haptic feedback.
-- **Desktop/mobile:** drag the disc; use the wheel or a two-finger pinch for depth.
+- **60-second flow run:** the timer starts on your first drag. Sinks earn 100 points, centered entries without a rim hit earn 200, and every three consecutive clean sinks raises the multiplier up to ×4. Rim hits break the streak without removing points. Finish to save your personal best on this browser, then replay in one tap.
+- **Mobile:** drag anywhere, then hold your finger or the marker above it over the cone’s mouth. The marker locks onto the center nearby; keep holding to approach and sink. Push/Pull buttons or a two-finger pinch give manual depth control. Pause and Reset are on screen; leaving the page pauses a run until you resume.
+- **Free play:** the same layouts and feedback without a timer. Switch between free play and score runs with the on-screen mode button (switching starts a fresh session).
+- **Desktop:** drag the disc; use the wheel or Push/Pull for depth.
 - **Ten layouts:** funnels become smaller and begin to move. A sink plays a capture spiral before the next level.
 
 All four control methods produce the same small `Intent` data structure. A deterministic simulation owns capture, rebound, and progression, while rendering and device input stay at the edges. That separation has made the project unusually easy to test even though WebXR hardware itself is not fully automatable.
@@ -65,7 +68,8 @@ You can also use the npm scripts directly:
 | Mind (default in XR) | Look toward the destination. Hold near the funnel mouth to advance; lean in/back for manual depth. |
 | Hands | Open palm to pull, pinch to hold, release while moving to throw, or shove with the palm. |
 | Controllers | Trigger to pull, stick to change depth, release during a flick to throw. A/X resets; B/Y toggles stats. |
-| Desktop/mobile | Drag. Wheel or two-finger pinch changes depth. `R` resets; `H` toggles stats. |
+| Mobile | Drag with one finger; hold your finger or the marker above it over the funnel mouth. Keep holding when the aim locks to approach and sink. Hold Push/Pull or use a two-finger pinch for manual depth. On-screen Pause/Reset. |
+| Desktop | Drag. Wheel or Push/Pull changes depth. `R` resets; `H` toggles stats; Space pauses. |
 
 ## How AI was used
 

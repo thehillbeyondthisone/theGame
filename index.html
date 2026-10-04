@@ -14,15 +14,56 @@
       <h1>A gift</h1>
       <div class="actions">
         <button id="put-on" type="button" hidden>Put it on</button>
-        <a id="open-quest" class="button" rel="noopener" hidden>Open on Meta Quest</a>
-        <button id="play-here" type="button" hidden>Play on this screen</button>
+        <button id="play-here" type="button" hidden>Play a 60-second run</button>
+        <button id="free-play" class="secondary" type="button" hidden>Free play · no timer</button>
+        <a id="open-quest" class="button secondary" rel="noopener" hidden>Open on Meta Quest</a>
       </div>
+      <p id="screen-intro">Guide the disc. Find your flow.<br />Perfect sinks + clean streaks = bigger scores.</p>
       <p id="status" role="status"></p>
       <p class="notice">
         Photosensitivity notice: this game uses soft, slow pulses of light and never strobes. Take a break if
         anything feels uncomfortable.
       </p>
     </main>
+    <section id="screen-controls" aria-label="Game controls" hidden>
+      <div class="screen-top">
+        <div class="scoreboard">
+          <div><span class="stat-label">Score</span><strong id="screen-score">0</strong></div>
+          <div><span class="stat-label" id="screen-clock-label">Time</span><strong id="screen-clock">60<span>s</span></strong></div>
+          <div><span class="stat-label">Best</span><strong id="screen-best">0</strong></div>
+        </div>
+        <div class="screen-actions">
+          <button id="screen-reset" type="button" aria-label="Reset disc">Reset</button>
+          <button id="screen-pause" type="button">Pause</button>
+        </div>
+      </div>
+      <div class="run-progress">
+        <p id="screen-progress">Level 1 / 10 · 0 clean</p>
+        <p id="screen-goal">3 clean sinks → ×2</p>
+        <div class="streak-track" aria-hidden="true"><div id="screen-streak-fill"></div></div>
+      </div>
+      <div id="screen-aim" aria-hidden="true" hidden></div>
+      <p id="screen-reward" role="status" aria-live="polite" aria-atomic="true"></p>
+      <div class="screen-bottom">
+        <p id="screen-hint">Drag to the cone’s mouth and hold</p>
+        <div class="depth-controls" aria-label="Manual depth">
+          <button id="screen-pull" type="button" aria-label="Pull disc closer" aria-describedby="screen-hint">Pull <span>closer</span></button>
+          <button id="screen-mode" type="button" aria-label="Switch to free play">Free play</button>
+          <button id="screen-push" type="button" aria-label="Push disc farther" aria-describedby="screen-hint">Push <span>farther</span></button>
+        </div>
+      </div>
+      <div id="screen-results" hidden>
+        <div class="result-card" role="dialog" aria-modal="true" aria-labelledby="result-title" aria-describedby="result-detail">
+          <p class="result-eyebrow" id="result-eyebrow">Run complete</p>
+          <h2 id="result-title">Find your flow</h2>
+          <p id="result-score">0</p>
+          <p id="result-detail"></p>
+          <p id="result-target"></p>
+          <button id="screen-replay" type="button">Play again · 60s</button>
+          <button id="screen-free" class="secondary" type="button">Free play · no timer</button>
+        </div>
+      </div>
+    </section>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

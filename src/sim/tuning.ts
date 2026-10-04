@@ -6,7 +6,7 @@
 export const tuning = {
   sim: {
     step: 1 / 120,
-    maxStepsPerFrame: 4,
+    maxStepsPerFrame: 12,
   },
   disc: {
     radius: 0.075,
@@ -97,6 +97,7 @@ export const tuning = {
     dampingRatio: 0.9,
     lead: 1.0,
     wheelStep: 0.1,
+    depthSpeed: 1.0, // m/s while a screen Push/Pull button is held
     throwBoost: 1.3,
     flickMinSpeed: 1.0,
   },

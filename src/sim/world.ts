@@ -2,6 +2,7 @@ import { type PlayFrame, clampToComfort, MAX_DIST, pointAhead } from './comfort'
 import { LEVEL_SHAPES, type Hoop, createHoop, crossHoop, placeHoop, stepHoop } from './hoop';
 import type { Intent } from './intent';
 import { type Rng, createRng } from './rng';
+import { type PlayMode, type ScoreRun, createScoreRun, scoreClip, scoreSink, tickScoreRun } from './run';
 import { tuning } from './tuning';
 import {
   type Vec3,
@@ -29,7 +30,7 @@ export interface Disc {
 }
 
 export type SimEvent =
-  | { type: 'hoop'; streak: number; at: Vec3; normal: Vec3; radius: number }
+  | { type: 'hoop'; streak: number; points: number; perfect: boolean; at: Vec3; normal: Vec3; radius: number }
   | { type: 'clip'; at: Vec3; speed: number }
   | { type: 'throw'; speed: number }
   | { type: 'push'; speed: number };
@@ -47,13 +48,14 @@ export interface World {
   run: number;
   captureRemaining: number;
   rimFreeUntil: number;
+  scoreRun: ScoreRun;
   /** Filled by stepWorld; the caller drains it every frame. */
   events: SimEvent[];
 }
 
 const TAU = 6.283185307179586;
 
-export function createWorld(frame: PlayFrame, seed: number): World {
+export function createWorld(frame: PlayFrame, seed: number, mode: PlayMode = 'free'): World {
   const start = pointAhead(vec3(), frame, 1.0, 0.15);
   const world: World = {
     step: 0,
@@ -68,6 +70,7 @@ export function createWorld(frame: PlayFrame, seed: number): World {
     run: 1,
     captureRemaining: 0,
     rimFreeUntil: -Infinity,
+    scoreRun: createScoreRun(mode),
     events: [],
   };
   placeHoop(world.hoop, frame, world.rng, start);
@@ -85,6 +88,8 @@ const mouthRadial = vec3();
  * always give the same result. Consumes the intent's one-shot fields.
  */
 export function stepWorld(world: World, intent: Intent, dt: number): void {
+  tickScoreRun(world.scoreRun, dt);
+  if (world.scoreRun.phase !== 'playing') return;
   const { disc } = world;
   const t = tuning.disc;
   copy(disc.prevPos, disc.pos);
@@ -166,7 +171,12 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
   if (crossing === 'pass') {
     world.hoopsPassed++;
     world.streak++;
-    world.events.push({ type: 'hoop', streak: world.streak, at: copy(vec3(), world.hoop.center), normal: copy(vec3(), world.hoop.normal), radius: world.hoop.radius });
+    // Grade the swept plane intersection, rather than a frame-dependent endpoint.
+    const sa = dot(sub(tmp, disc.prevPos, world.hoop.center), world.hoop.normal);
+    const sb = dot(sub(tmp, disc.pos, world.hoop.center), world.hoop.normal);
+    addScaled(tmp, disc.prevPos, sub(mouthOffset, disc.pos, disc.prevPos), sa / (sa - sb));
+    const reward = scoreSink(world.scoreRun, world.streak, distance(tmp, world.hoop.center) <= world.hoop.radius * 0.35);
+    world.events.push({ type: 'hoop', streak: world.streak, ...reward, at: copy(vec3(), world.hoop.center), normal: copy(vec3(), world.hoop.normal), radius: world.hoop.radius });
     world.captureRemaining = 0.82;
     world.level = (world.hoopsPassed % LEVEL_SHAPES.length) + 1;
     world.run = Math.floor(world.hoopsPassed / LEVEL_SHAPES.length) + 1;
@@ -185,6 +195,7 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
     if (radial > 1e-6) addScaled(disc.vel, disc.vel, mouthRadial, Math.max(0.15, impact * 0.3) / radial);
     world.rimFreeUntil = world.time + 0.2;
     world.streak = 0;
+    scoreClip(world.scoreRun);
     world.events.push({ type: 'clip', at: contact, speed: impact });
   }
 

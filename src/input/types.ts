@@ -61,6 +61,10 @@ export interface PointerFrame {
   rayDir: Vec3;
   /** Accumulated wheel notches since last frame; + is away from you. */
   wheel: number;
+  /** One-finger touch aim gets gradual depth assistance near the funnel. */
+  touchAim: boolean;
+  /** Manual depth velocity from the screen's Push/Pull controls, m/s. */
+  depthRate: number;
 }
 
 /** Everything the control adapters read, as plain data. Rebuilt every frame. */
@@ -99,6 +103,6 @@ export function createInputFrame(): InputFrame {
     head: null,
     left: { hand: handFrame('left'), controller: controllerFrame('left') },
     right: { hand: handFrame('right'), controller: controllerFrame('right') },
-    pointer: { down: false, rayOrigin: vec3(), rayDir: vec3(0, 0, -1), wheel: 0 },
+    pointer: { down: false, rayOrigin: vec3(), rayDir: vec3(0, 0, -1), wheel: 0, touchAim: false, depthRate: 0 },
   };
 }

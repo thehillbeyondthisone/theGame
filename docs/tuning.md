@@ -4,6 +4,22 @@ Back to [PLAN.md](../PLAN.md). These are first guesses to tune against real play
 
 Units: meters, seconds, degrees (radians in code).
 
+## Current screen gameplay pass (2026-10-04)
+
+These implemented values supersede the proposed scoring values below. Other roadmap mechanics remain provisional.
+
+| Value | Current behavior |
+| --- | --- |
+| Score run | 60 active seconds; starts on first canvas gesture; pauses when the page is hidden |
+| Sink / Perfect | 100 / 200 points; Perfect requires a plane crossing within 35% of mouth radius and no rim contact on that attempt |
+| Streak multiplier | ×2 at 3 clean sinks, ×3 at 6, ×4 at 9; rim/reset breaks streak without removing points |
+| Touch aim | Marker up to 52 CSS px above the finger; small attraction within 38 CSS px (bounded by screen width) |
+| Touch entry | Approach 0.18 m above the mouth, then pull 0.12 m through once within 0.065 m of the approach target; retains radial aiming error |
+| Personal best | Completed score runs only; stored locally under `the-game-sprint-best-v1`; free play has no deadline |
+| Fixed-step catch-up | Up to 12 steps, covering the 0.1 s frame-time cap; allows 30 fps rendering to keep the timer and simulation at full speed |
+
+Emulated touch verifies capture, scoring, replay, cancellation, simultaneous steering/depth input, and portrait/landscape UI. Unit checks cover centered entries at 30/60/90 fps; these are frame-timing simulations, not device performance measurements. Physical phone and Quest feel/audio/comfort remain playtest work.
+
 ## World and comfort
 
 | Value | Start | Notes |
@@ -12,7 +28,7 @@ Units: meters, seconds, degrees (radians in code).
 | Yaw from play-forward | ±55° | |
 | Pitch | −35° to +25° | Looking down is easier than looking up |
 | Simulation step | 1/120 s, fixed | Rendering interpolates between steps |
-| Max frame catch-up | 4 steps | After a hitch, drop time instead of spiraling |
+| Max frame catch-up | 12 steps | Covers the 0.1 s frame-time cap; drop excess backlog after longer hitches |
 
 ## Disc
 
@@ -76,6 +92,7 @@ Units: meters, seconds, degrees (radians in code).
 | View | 60° vertical; portrait phones widen it so the horizontal view stays ≥ 50° | |
 | Drag spring | 60 /s², ratio 0.9 | |
 | Wheel depth step | 0.1 m per notch | |
+| Touch aim | Center lock within min(28 px, 6.5% of screen width); feather over twice that radius | Accepts either the finger or the marker up to 52 px above it; manual depth overrides assistance |
 | Throw on release | 1.3 × disc velocity | |
 
 ## Capture (M1)
