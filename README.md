@@ -18,6 +18,14 @@ Guide a red disc into a shifting violet funnel. On Quest, you can play hands-fre
 
 ## What is playable
 
+### Local Enterprise lounge preview
+
+Run `npm run dev:local`, then open [the opt-in lounge preview](http://localhost:5174/?preview=enterprise).
+It adds a softly blurred lounge backdrop, matching foreground lighting, a translucent circle field,
+and small capture accents on desktop/mobile. **Scene** adjusts blur, enables calm visuals, and
+compares the original look without resetting your run. The normal URL keeps the original presentation.
+See the [preview notes and artwork provenance](docs/reference/enterprise-preview/README.md).
+
 - **Mind mode:** hold your gaze near the funnel mouth to draw the disc forward; lean to adjust depth.
 - **Hand tracking:** open-palm pull, pinch-and-release throw, and palm shove.
 - **Controllers:** trigger tractor beam, stick depth control, throws, and haptic feedback.

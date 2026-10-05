@@ -24,6 +24,9 @@ export class DiscView {
   readonly captureRoot = new Group();
   private readonly spinner = new Group();
   private readonly captured: Mesh;
+  private readonly side: MeshPhongMaterial;
+  private readonly face: MeshBasicMaterial;
+  private lounge = false;
   private captureAt = -Infinity;
 
   constructor() {
@@ -35,12 +38,23 @@ export class DiscView {
       shininess: 42,
     });
     const face = new MeshBasicMaterial({ map: discFaceTexture(), side: DoubleSide });
+    this.side = side;
+    this.face = face;
     const body = new Mesh(new CylinderGeometry(r, r, r * 0.105, 64), [side, face, face]);
     this.spinner.add(body);
     this.group.add(this.spinner);
     this.captured = new Mesh(body.geometry, body.material);
     this.captureRoot.add(this.captured);
     this.captureRoot.visible = false;
+  }
+
+  setLoungeLook(enabled: boolean): void {
+    if (this.lounge === enabled) return;
+    this.lounge = enabled;
+    this.side.emissiveIntensity = enabled ? 0.48 : 0.34;
+    this.side.shininess = enabled ? 76 : 42;
+    this.side.specular.set(enabled ? 0xffc7a0 : 0x111111);
+    this.face.color.set(enabled ? 0xffe6d8 : 0xffffff);
   }
 
   onCapture(center: { x: number; y: number; z: number },

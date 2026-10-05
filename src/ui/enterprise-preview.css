@@ -1,0 +1,190 @@
+/* Loaded only by ?preview=enterprise. The ordinary game keeps its original look. */
+#enterprise-backdrop {
+  --lounge-blur: 6px;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #151320;
+}
+.lounge-drift {
+  position: absolute;
+  inset: -24px;
+  animation: lounge-drift 36s ease-in-out infinite alternate;
+  transform-origin: 50% 40%;
+}
+.lounge-drift img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 48%;
+}
+.lounge-room { filter: blur(var(--lounge-blur)); }
+.lounge-windows {
+  filter: blur(calc(var(--lounge-blur) * 0.65));
+  mask-image: linear-gradient(to bottom, #000 10%, #000 42%, transparent 63%);
+}
+.lounge-near {
+  filter: blur(calc(var(--lounge-blur) * 1.65));
+  mask-image: linear-gradient(to bottom, transparent 54%, #000 90%);
+}
+.lounge-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(8, 9, 20, 0.3), transparent 25%, transparent 60%, rgba(8, 7, 15, 0.45)),
+    radial-gradient(ellipse at 50% 42%, transparent 22%, rgba(9, 8, 18, 0.2) 80%);
+}
+@keyframes lounge-drift {
+  from { transform: scale(1.015) translate(-2px, 0); }
+  to { transform: scale(1.045) translate(3px, -3px); }
+}
+.lounge-calm-mode .lounge-drift { animation: none; transform: scale(1.03); }
+[data-lounge='true'] #scene { z-index: 1; }
+[data-lounge='true'] #landing { z-index: 2; }
+[data-lounge='true'] #screen-controls { z-index: 3; }
+
+#enterprise-toolbar {
+  position: fixed;
+  inset: max(16px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) auto max(24px, env(safe-area-inset-left));
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  color: #ece4f2;
+}
+.lounge-caption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px #000;
+}
+.lounge-caption small {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.55rem;
+  letter-spacing: 0.17em;
+  color: #c5b1a6;
+}
+.lounge-dot { width: 5px; height: 5px; border-radius: 50%; background: #ffc38a; box-shadow: 0 0 10px #fca86b; }
+#enterprise-toolbar button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid rgba(214, 189, 170, 0.28);
+  background: rgba(20, 17, 28, 0.7);
+  color: #f5e7dc;
+  box-shadow: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+}
+.lounge-scene-button span { margin-left: 10px; color: #d2bca4; }
+#lounge-settings {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  width: min(300px, calc(100vw - 32px));
+  padding: 22px;
+  border: 1px solid rgba(211, 185, 167, 0.3);
+  border-radius: 20px;
+  background: rgba(20, 17, 29, 0.96);
+  box-shadow: 0 16px 50px #0007;
+  pointer-events: auto;
+  backdrop-filter: blur(18px);
+}
+.lounge-settings-title { margin: 0; font-family: Georgia, serif; font-size: 1.15rem; }
+.lounge-settings-copy { margin: 9px 0 18px; font-size: 0.72rem; line-height: 1.5; color: #cabdce; }
+.lounge-comparison { display: flex; gap: 6px; margin-bottom: 22px; }
+#enterprise-toolbar .lounge-comparison button { flex: 1; border-radius: 10px; }
+#enterprise-toolbar button[aria-pressed='true'] { border-color: #bca1df; background: #544166; }
+.lounge-blur-label { display: flex; justify-content: space-between; font-size: 0.78rem; }
+.lounge-blur-label output { color: #d8bbff; font-variant-numeric: tabular-nums; }
+#lounge-blur { width: 100%; min-height: 36px; margin: 5px 0 0; accent-color: #b69add; cursor: pointer; }
+.lounge-range-ends { display: flex; justify-content: space-between; font-size: 0.62rem; color: #b5a6bf; }
+.lounge-calm { display: grid; grid-template-columns: 24px 1fr; margin-top: 20px; font-size: 0.78rem; align-items: center; cursor: pointer; }
+.lounge-calm input { accent-color: #b69add; width: 16px; height: 16px; margin: 0; }
+.lounge-calm span { grid-column: 2; margin-top: 5px; font-size: 0.65rem; color: #b5a6bf; }
+
+[data-preview='enterprise'] #screen-controls { padding-top: max(78px, calc(env(safe-area-inset-top) + 66px)); }
+[data-preview='enterprise'] .run-progress { top: max(148px, calc(env(safe-area-inset-top) + 136px)); }
+[data-lounge='true'] h1 {
+  margin-top: 14vh;
+  font-size: clamp(3.4rem, 8vw, 6.5rem);
+  letter-spacing: -0.015em;
+  color: #f1decd;
+  text-shadow: 0 3px 25px #0008, 0 0 55px #cfb2fe25;
+}
+[data-lounge='true'] #landing .actions { gap: 12px; margin-bottom: 20px; }
+[data-lounge='true'] #landing button:not(.secondary) {
+  background: linear-gradient(145deg, #ffc396, #f99d79);
+  border-color: #ffe2c2aa;
+  box-shadow: 0 8px 35px #120b1499, 0 0 28px #f09b6830;
+  color: #321d25;
+}
+[data-lounge='true'] #landing .secondary {
+  border-color: #c6afc15c;
+  background: #12121d85;
+  color: #f0dce5;
+  backdrop-filter: blur(12px);
+}
+[data-lounge='true'] #screen-intro { color: #e7d5d4; text-shadow: 0 1px 8px #000; }
+[data-lounge='true'] .notice { color: #d3c2c9; text-shadow: 0 1px 8px #000; }
+[data-lounge='true'] .scoreboard {
+  gap: 25px;
+  padding: 12px 20px;
+  border: 1px solid #dac4e126;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #161321ba, #16132175);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 25px #0002;
+}
+[data-lounge='true'] .stat-label { font-size: 0.57rem; color: #bfaed7; }
+[data-lounge='true'] .scoreboard strong { color: #f2e5f8; font-weight: 400; }
+[data-lounge='true'] #screen-controls button {
+  background: #171321b8;
+  border-color: #c1a4d44d;
+  color: #f1e2ed;
+  backdrop-filter: blur(12px);
+}
+[data-lounge='true'] #screen-controls button.active { background: #63394bd9; border-color: #efae88; }
+[data-lounge='true'] .run-progress { padding-left: 8px; }
+[data-lounge='true'] #screen-goal { color: #e0cadf; }
+[data-lounge='true'] .streak-track { background: #d8bfea24; }
+[data-lounge='true'] #screen-streak-fill { background: linear-gradient(90deg, #ba9cec, #ffbd98); }
+[data-lounge='true'] #screen-hint { background: #171321b3; border: 1px solid #ceb0de26; backdrop-filter: blur(12px); }
+[data-lounge='true'] #screen-controls .depth-controls button { border-radius: 20px; min-width: 104px; }
+[data-lounge='true'] .result-card { background: linear-gradient(145deg, #392b42ed, #171321ed); border-color: #ab8fa570; backdrop-filter: blur(20px); }
+[data-lounge='true'] #screen-results { background: #100c185c; backdrop-filter: blur(5px); }
+
+@media (max-width: 600px) {
+  #enterprise-toolbar { left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); }
+  .lounge-caption { font-size: 0.58rem; letter-spacing: 0.1em; gap: 7px; }
+  .lounge-caption small { font-size: 0.5rem; }
+  #enterprise-toolbar .lounge-scene-button { padding: 10px 14px; }
+  [data-lounge='true'] h1 { margin-top: 17vh; font-size: 3.8rem; }
+  [data-lounge='true'] .scoreboard { gap: 16px; padding: 10px 13px; border-radius: 14px; }
+  [data-lounge='true'] .scoreboard strong { font-size: 1.3rem; }
+  [data-lounge='true'] #screen-controls .screen-actions button { padding: 10px; min-width: 48px; font-size: 0.75rem; }
+  [data-lounge='true'] .run-progress { top: max(142px, calc(env(safe-area-inset-top) + 130px)); }
+  [data-lounge='true'] #screen-controls .depth-controls button { min-width: 88px; }
+  .lounge-drift img { object-position: 51% 48%; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #enterprise-toolbar { top: 8px; }
+  [data-preview='enterprise'] #screen-controls { padding-top: max(60px, calc(env(safe-area-inset-top) + 54px)); }
+  [data-preview='enterprise'] .run-progress { top: max(134px, calc(env(safe-area-inset-top) + 128px)); width: 180px; }
+  [data-lounge='true'] .scoreboard { padding: 8px 13px; }
+  [data-lounge='true'] h1 { margin-top: 15vh; font-size: 3rem; }
+  #lounge-settings { max-height: calc(100dvh - 80px); overflow-y: auto; }
+  [data-lounge='true'] #landing .actions { gap: 7px; margin-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lounge-drift { animation: none; transform: scale(1.03); }
+}

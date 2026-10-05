@@ -5,6 +5,10 @@ import type { PlayMode } from './sim/run';
 import { type ImmersiveMode, detectImmersiveMode, offerSession, requestSession, webLaunchUrl } from './platform/xr';
 
 const params = new URLSearchParams(location.search);
+// This review route does not load the artwork or preview stylesheet in normal play.
+const preview = params.get('preview') === 'enterprise'
+  ? new (await import('./ui/enterprise-preview')).EnterprisePreview()
+  : null;
 
 // Dev only: `?emulate` (or `?emulate=office_small`) fakes a Quest 3 in a desktop browser.
 if (import.meta.env.DEV && params.has('emulate')) {
@@ -30,6 +34,8 @@ let screenControls: ScreenControls;
 const touch = matchMedia('(any-pointer: coarse)').matches;
 
 const app = new App(el<HTMLCanvasElement>('#scene'), {
+  enterprisePreview: preview !== null,
+  onLookChanged: (look) => preview?.setLook(look),
   hud: params.get('hud') !== '0',
   screenHud: params.has('hud') && params.get('hud') !== '0',
   seed: Number(params.get('seed')) || 1,
@@ -41,6 +47,7 @@ const app = new App(el<HTMLCanvasElement>('#scene'), {
   onScreenState: (state) => screenControls?.update(state),
   onScreenReward: (text, perfect) => screenControls?.reward(text, perfect),
 });
+if (preview) preview.onSettings = (enabled, calm) => app.setLoungePreview(enabled, calm);
 screenControls = new ScreenControls({
   reset: () => app.resetScreenDisc(),
   pause: () => app.toggleScreenPause(),

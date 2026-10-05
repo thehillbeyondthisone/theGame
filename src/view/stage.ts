@@ -19,6 +19,10 @@ export class Stage {
   readonly camera = new PerspectiveCamera(60, 1, 0.05, 50);
   private readonly background = new Color(PALETTE.night);
   private readonly pattern = new CircleField();
+  private readonly key = new DirectionalLight(0xc9b6ff, 3.3);
+  private readonly fill = new DirectionalLight(0x594aba, 0.5);
+  private look: Look = 'desktop';
+  private lounge = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new WebGLRenderer({
@@ -36,12 +40,10 @@ export class Stage {
 
     this.scene.add(this.pattern.mesh);
     this.scene.add(new AmbientLight(0xffffff, 1.0));
-    const key = new DirectionalLight(0xc9b6ff, 3.3);
-    key.position.set(-1.3, 2.4, 1.8);
-    this.scene.add(key);
-    const fill = new DirectionalLight(0x594aba, 0.5);
-    fill.position.set(1, 1, -1);
-    this.scene.add(fill);
+    this.key.position.set(-1.3, 2.4, 1.8);
+    this.scene.add(this.key);
+    this.fill.position.set(1, 1, -1);
+    this.scene.add(this.fill);
 
     this.resetCamera();
     this.setLook('desktop');
@@ -52,7 +54,23 @@ export class Stage {
 
   /** Over passthrough the background must stay transparent so your room shows through. */
   setLook(look: Look): void {
-    this.scene.background = look === 'ar' ? null : this.background;
+    this.look = look;
+    this.applyLook();
+  }
+
+  setLoungePreview(enabled: boolean): void {
+    this.lounge = enabled;
+    this.applyLook();
+  }
+
+  private applyLook(): void {
+    const lounge = this.lounge && this.look === 'desktop';
+    this.scene.background = this.look === 'ar' || lounge ? null : this.background;
+    this.key.color.set(lounge ? 0xd6c5ff : 0xc9b6ff);
+    this.key.intensity = lounge ? 2.8 : 3.3;
+    this.fill.color.set(lounge ? 0xffae7b : 0x594aba);
+    this.fill.intensity = lounge ? 0.8 : 0.5;
+    this.pattern.setLoungeLook(lounge);
   }
 
   placePattern(frame: PlayFrame): void {

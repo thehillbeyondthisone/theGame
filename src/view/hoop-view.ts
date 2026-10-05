@@ -112,6 +112,7 @@ export class HoopView {
   private captureAt = -Infinity;
   private clipAt = -Infinity;
   private captureScale = 1;
+  private lounge = false;
 
   constructor() {
     const mesh = new Mesh(this.geometry, [this.material, this.interiorMaterial]);
@@ -123,14 +124,23 @@ export class HoopView {
     this.captureRoot.visible = false;
   }
 
-  onPass(oldCenter: Vec3, oldNormal: Vec3, radius: number, now: number, guard: LightGuard): void {
+  setLoungeLook(enabled: boolean): void {
+    if (this.lounge === enabled) return;
+    this.lounge = enabled;
+    this.material.specular.set(enabled ? 0x9d8bda : 0x291b4e);
+    this.material.shininess = enabled ? 52 : 18;
+  }
+
+  onPass(oldCenter: Vec3, oldNormal: Vec3, radius: number, now: number, guard: LightGuard): boolean {
     this.captureRoot.position.set(oldCenter.x, oldCenter.y, oldCenter.z);
     normal.set(oldNormal.x, oldNormal.y, oldNormal.z);
     this.captureRoot.quaternion.setFromUnitVectors(UP, normal);
     this.captureAt = now;
     this.captureScale = radius / tuning.hoop.radius;
     this.popAt = now;
-    if (guard.request(now)) this.flashAt = now;
+    const pulseAllowed = guard.request(now);
+    if (pulseAllowed) this.flashAt = now;
+    return pulseAllowed;
   }
 
   onClip(now: number): void {

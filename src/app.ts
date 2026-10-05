@@ -17,13 +17,14 @@ import { tuning } from './sim/tuning';
 import { addScaled, copy, distance, lerp, normalize, set, sub, vec3 } from './sim/vec3';
 import { type World, createWorld, resetDisc, stepWorld } from './sim/world';
 import { Beams } from './view/beams';
+import { CaptureAccent } from './view/capture-accent';
 import { DiscView } from './view/disc-view';
 import { HoopView } from './view/hoop-view';
 import { FrameStats, Hud } from './view/hud';
 import { LightGuard } from './view/light-guard';
 import { PALETTE, rgb } from './view/palette';
 import { Reticle } from './view/reticle';
-import { DESKTOP_EYE, Stage } from './view/stage';
+import { DESKTOP_EYE, Stage, type Look } from './view/stage';
 
 export interface AppOptions {
   /** Show the performance panel (toggle with H, or B/Y on a controller). */
@@ -35,6 +36,8 @@ export interface AppOptions {
   onExitXR: () => void;
   onScreenState?: (state: ScreenState) => void;
   onScreenReward?: (text: string, perfect: boolean) => void;
+  enterprisePreview?: boolean;
+  onLookChanged?: (look: Look) => void;
 }
 
 export interface ScreenState {
@@ -82,6 +85,9 @@ export class App {
   private readonly reticle = new Reticle();
   private readonly hud = new Hud();
   private readonly stats = new FrameStats();
+  private readonly captureAccent: CaptureAccent | null;
+  private lounge = false;
+  private calmVisuals = false;
   private readonly raycaster = new Raycaster();
   private readonly ndc = new Vector2();
   private readonly projected = new Vector3();
@@ -112,6 +118,9 @@ export class App {
     private readonly options: AppOptions,
   ) {
     this.stage = new Stage(canvas);
+    this.captureAccent = options.enterprisePreview ? new CaptureAccent() : null;
+    if (this.captureAccent) this.stage.scene.add(this.captureAccent.root);
+    this.setLoungePreview(options.enterprisePreview === true, matchMedia('(prefers-reduced-motion: reduce)').matches);
     this.hudVisible = options.hud;
     this.world = createWorld(this.desktopFrame(), options.seed);
     this.stage.placePattern(this.world.frame);
@@ -150,6 +159,7 @@ export class App {
     this.recorded = false;
     this.discView.clearCapture();
     this.hoopView.clearCapture();
+    this.captureAccent?.clear();
     this.playing = true;
     this.screenPaused = false;
     this.paused = false;
@@ -190,6 +200,23 @@ export class App {
     this.audio.enable();
   }
 
+  /** Review graphics without changing the simulation, input, or saved score. */
+  setLoungePreview(enabled: boolean, calm: boolean): void {
+    this.lounge = enabled;
+    this.calmVisuals = calm;
+    this.applyLook(this.session ? this.session.environmentBlendMode === 'opaque' ? 'vr' : 'ar' : 'desktop');
+  }
+
+  private applyLook(look: Look): void {
+    const lounge = this.lounge && look === 'desktop';
+    this.stage.setLoungePreview(this.lounge);
+    this.stage.setLook(look);
+    this.discView.setLoungeLook(lounge);
+    this.hoopView.setLoungeLook(lounge);
+    this.captureAccent?.clear();
+    this.options.onLookChanged?.(look);
+  }
+
   async enterXR(session: XRSession): Promise<void> {
     this.enableAudio();
     this.clearScreenInput();
@@ -201,7 +228,7 @@ export class App {
       this.paused = session.visibilityState !== 'visible';
     });
     await this.stage.renderer.xr.setSession(session);
-    this.stage.setLook(session.environmentBlendMode === 'opaque' ? 'vr' : 'ar');
+    this.applyLook(session.environmentBlendMode === 'opaque' ? 'vr' : 'ar');
     this.anchored = false;
     // Recentering (holding the Meta button) moves the origin: re-anchor play to the head.
     this.stage.renderer.xr.getReferenceSpace()?.addEventListener('reset', () => {
@@ -216,7 +243,7 @@ export class App {
     this.session = null;
     this.paused = false;
     this.stage.resetCamera();
-    this.stage.setLook('desktop');
+    this.applyLook('desktop');
     this.anchor(this.desktopFrame());
     this.options.onExitXR();
   };
@@ -309,7 +336,10 @@ export class App {
   private react(now: number): void {
     for (const e of this.world.events) {
       if (e.type === 'hoop') {
-        this.hoopView.onPass(e.at, e.normal, e.radius, now, this.guard);
+        const pulseAllowed = this.hoopView.onPass(e.at, e.normal, e.radius, now, this.guard);
+        if (this.lounge && !this.session && !this.calmVisuals && pulseAllowed) {
+          this.captureAccent?.capture(e.at, e.normal, e.radius, now);
+        }
         this.discView.onCapture(e.at, e.normal, now);
         this.audio.sink(e.streak, e.perfect, this.world.scoreRun.multiplier);
         this.options.onScreenReward?.(`${e.perfect ? 'Perfect' : 'Sink'} +${e.points}`, e.perfect);
@@ -354,6 +384,7 @@ export class App {
     this.discView.updateCapture(now);
     this.hoopView.root.visible = inPlay;
     this.hoopView.update(this.world.hoop, now);
+    this.captureAccent?.update(now, this.lounge && !this.session && !this.calmVisuals);
     const disc = this.discView.group.position;
     const mode = this.arbiter.mode;
 
