@@ -2,7 +2,8 @@ import { type PlayFrame, clampToComfort, MAX_DIST, pointAhead } from './comfort'
 import { LEVEL_SHAPES, type Hoop, createHoop, crossHoop, placeHoop, stepHoop } from './hoop';
 import type { Intent } from './intent';
 import { type Rng, createRng } from './rng';
-import { type PlayMode, type ScoreRun, createScoreRun, scoreClip, scoreSink, tickScoreRun } from './run';
+import { type PlayMode, type ScoreRun, createScoreRun, scoreClip, scoreMiss, scoreSink, tickScoreRun } from './run';
+import { assistToss } from './toss';
 import { tuning } from './tuning';
 import {
   type Vec3,
@@ -33,6 +34,7 @@ export type SimEvent =
   | { type: 'hoop'; streak: number; points: number; perfect: boolean; at: Vec3; normal: Vec3; radius: number }
   | { type: 'clip'; at: Vec3; speed: number }
   | { type: 'throw'; speed: number }
+  | { type: 'miss'; clipped: boolean }
   | { type: 'push'; speed: number };
 
 export interface World {
@@ -40,6 +42,11 @@ export interface World {
   time: number;
   frame: PlayFrame;
   disc: Disc;
+  /** Where a fresh disc waits. */
+  rest: Vec3;
+  /** True from a flick throw until the disc is captured or missed. */
+  flying: boolean;
+  flightTime: number;
   hoop: Hoop;
   rng: Rng;
   hoopsPassed: number;
@@ -55,13 +62,16 @@ export interface World {
 
 const TAU = 6.283185307179586;
 
-export function createWorld(frame: PlayFrame, seed: number, mode: PlayMode = 'free'): World {
-  const start = pointAhead(vec3(), frame, 1.0, 0.15);
+export function createWorld(frame: PlayFrame, seed: number, mode: PlayMode = 'free', rest?: Vec3): World {
+  const start = rest ?? pointAhead(vec3(), frame, 1.0, 0.15);
   const world: World = {
     step: 0,
     time: 0,
     frame,
     disc: { pos: copy(vec3(), start), vel: vec3(), prevPos: copy(vec3(), start), spin: 0, spinRate: 0 },
+    rest: copy(vec3(), start),
+    flying: false,
+    flightTime: 0,
     hoop: createHoop(),
     rng: createRng(seed),
     hoopsPassed: 0,
@@ -111,14 +121,31 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
     world.events.push({ type: 'throw', speed: length(disc.vel) });
     intent.throwBoost = 1;
   }
+  if (intent.toss.x !== 0 || intent.toss.y !== 0 || intent.toss.z !== 0) {
+    if (!world.flying) {
+      // Wherever the disc was let go, its arc soon rejoins the one from its resting place,
+      // so a throw depends on the flick and not on how far the finger carried it.
+      addScaled(disc.vel, intent.toss, sub(tmp, disc.pos, world.rest), -1 / tuning.toss.rejoin);
+      assistToss(disc.vel, disc.vel, world, dt);
+      world.flying = true;
+      world.flightTime = 0;
+      // Every throw is a fresh attempt.
+      world.scoreRun.shotClipped = false;
+      world.events.push({ type: 'throw', speed: length(disc.vel) });
+    }
+    set(intent.toss, 0, 0, 0);
+  }
   if (intent.impulse.x !== 0 || intent.impulse.y !== 0 || intent.impulse.z !== 0) {
     add(disc.vel, disc.vel, intent.impulse);
     world.events.push({ type: 'push', speed: length(intent.impulse) });
     set(intent.impulse, 0, 0, 0);
   }
 
-  // Pull: a damped spring toward the target, damping relative to the target's motion.
-  if (intent.stiffness > 0) {
+  // A thrown disc flies an arc and can't be steered. Otherwise,
+  // pull: a damped spring toward the target, damping relative to the target's motion.
+  if (world.flying) {
+    set(acc, 0, -tuning.toss.gravity, 0);
+  } else if (intent.stiffness > 0) {
     const k = intent.stiffness * (world.time < world.rimFreeUntil ? 0.25 : 1);
     const c = 2 * intent.dampingRatio * Math.sqrt(k);
     scale(acc, sub(tmp, intent.target, disc.pos), k);
@@ -143,7 +170,7 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
 
   // Comfort volume: a soft spring back inside, with extra damping while outside.
   clampToComfort(comfy, disc.pos, world.frame);
-  const outside = distance(comfy, disc.pos);
+  const outside = world.flying ? 0 : distance(comfy, disc.pos);
   if (outside > 1e-6) {
     const kb = t.boundaryStiffness;
     addScaled(acc, acc, sub(tmp, comfy, disc.pos), kb);
@@ -156,7 +183,8 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
   addScaled(disc.pos, disc.pos, disc.vel, dt);
 
   // Hard failsafe: nothing ever ends up far outside the comfort volume.
-  if (outside > 0.4 || distance(disc.pos, world.frame.anchor) > MAX_DIST + 0.4) {
+  // A thrown disc may leave it; that throw ends as a miss below.
+  if (!world.flying && (outside > 0.4 || distance(disc.pos, world.frame.anchor) > MAX_DIST + 0.4)) {
     clampToComfort(disc.pos, disc.pos, world.frame);
     scale(disc.vel, disc.vel, 0.3);
   }
@@ -199,6 +227,18 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
     world.events.push({ type: 'clip', at: contact, speed: impact });
   }
 
+  if (world.flying && world.captureRemaining === 0) {
+    const tt = tuning.toss;
+    world.flightTime += dt;
+    const anchor = world.frame.anchor;
+    if (disc.pos.y < anchor.y - tt.floor || distance(disc.pos, anchor) > tt.range || world.flightTime > tt.maxFlight) {
+      world.events.push({ type: 'miss', clipped: world.scoreRun.shotClipped });
+      world.streak = 0;
+      scoreMiss(world.scoreRun);
+      resetDisc(world);
+    }
+  }
+
   world.step++;
   world.time = world.step * dt;
 }
@@ -207,7 +247,9 @@ export function stepWorld(world: World, intent: Intent, dt: number): void {
 export function resetDisc(world: World): void {
   const { disc } = world;
   world.captureRemaining = 0;
-  pointAhead(disc.pos, world.frame, 1.0, 0.15);
+  world.flying = false;
+  world.flightTime = 0;
+  copy(disc.pos, world.rest);
   copy(disc.prevPos, disc.pos);
   set(disc.vel, 0, 0, 0);
 }

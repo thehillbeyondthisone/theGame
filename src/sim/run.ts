@@ -47,6 +47,11 @@ export function scoreSink(run: ScoreRun, streak: number, centered: boolean): { p
   return { points, perfect };
 }
 
+/** A flick throw that never reached the mouth. */
+export function scoreMiss(run: ScoreRun): void {
+  run.multiplier = 1;
+}
+
 export function scoreClip(run: ScoreRun): void {
   run.clips++;
   run.shotClipped = true;

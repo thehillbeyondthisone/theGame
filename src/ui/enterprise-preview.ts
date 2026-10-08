@@ -15,6 +15,7 @@ export class EnterprisePreview {
   private blur: HTMLInputElement;
   private blurValue: HTMLOutputElement;
   private calmInput: HTMLInputElement;
+  private blurPips: Element[];
   private readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   onSettings?: (enabled: boolean, calm: boolean) => void;
 
@@ -37,7 +38,7 @@ export class EnterprisePreview {
     this.toolbar.setAttribute('aria-label', 'Enterprise lounge preview');
     this.toolbar.innerHTML = `<div class="lounge-caption"><span class="lounge-dot" aria-hidden="true"></span>
       <span>Enterprise lounge <small>Visual preview</small></span></div>
-      <button class="lounge-scene-button" type="button" aria-expanded="false" aria-controls="lounge-settings">Scene <span aria-hidden="true">⌄</span></button>
+      <button class="lounge-scene-button" type="button" aria-expanded="false" aria-controls="lounge-settings">Scene</button>
       <section id="lounge-settings" aria-label="Scene settings" hidden>
         <p class="lounge-settings-title">Your seat in Ten Forward</p>
         <p class="lounge-settings-copy">A quiet view. The game stays in focus.</p>
@@ -46,7 +47,10 @@ export class EnterprisePreview {
           <button id="lounge-on" type="button" aria-pressed="true">Lounge</button>
         </div>
         <label class="lounge-blur-label" for="lounge-blur">Background blur <output id="lounge-blur-value" for="lounge-blur">6</output></label>
-        <input id="lounge-blur" type="range" min="0" max="12" step="1" value="6" />
+        <div class="lounge-blur-control">
+          <span class="pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          <input id="lounge-blur" type="range" min="0" max="12" step="1" value="6" />
+        </div>
         <div class="lounge-range-ends" aria-hidden="true"><span>Clear</span><span>Dreamy</span></div>
         <label class="lounge-calm"><input id="lounge-calm" type="checkbox" /> Calm visuals <span>Still background · fewer effects</span></label>
       </section>`;
@@ -59,6 +63,7 @@ export class EnterprisePreview {
     this.blur = this.element<HTMLInputElement>('#lounge-blur');
     this.blurValue = this.element<HTMLOutputElement>('#lounge-blur-value');
     this.calmInput = this.element<HTMLInputElement>('#lounge-calm');
+    this.blurPips = [...this.element('.lounge-blur-control .pips').children];
     this.calmInput.checked = this.calm;
     this.toggle.addEventListener('click', () => this.showPanel(this.panel.hidden === true));
     this.original.addEventListener('click', () => this.select(false));
@@ -66,7 +71,9 @@ export class EnterprisePreview {
     this.blur.addEventListener('input', () => {
       this.blurValue.value = this.blur.value;
       this.backdrop.style.setProperty('--lounge-blur', `${this.blur.value}px`);
+      this.syncBlurPips();
     });
+    this.syncBlurPips();
     this.calmInput.addEventListener('change', () => {
       this.calm = this.calmInput.checked;
       this.sync();
@@ -108,6 +115,15 @@ export class EnterprisePreview {
     this.blur.disabled = !this.enabled;
     this.setLook(this.look);
     this.onSettings?.(this.enabled, this.calm || this.reducedMotion.matches);
+  }
+
+  /** Seven floor circles stand in for the 0–12 range; the nearest one carries the ring. */
+  private syncBlurPips(): void {
+    const at = Math.round(Number(this.blur.value) / 2);
+    this.blurPips.forEach((pip, i) => {
+      pip.classList.toggle('lit', i <= at);
+      pip.classList.toggle('sel', i === at);
+    });
   }
 
   private showPanel(show: boolean): void {

@@ -21,6 +21,8 @@ export interface Intent {
   impulse: Vec3;
   /** One-shot velocity multiplier on release (a throw). 1 = none. Consumed by the next step. */
   throwBoost: number;
+  /** One-shot launch velocity (m/s) of a flick throw; the disc then flies an arc. Zero = none. */
+  toss: Vec3;
 }
 
 export function createIntent(): Intent {
@@ -32,6 +34,7 @@ export function createIntent(): Intent {
     dampingRatio: 1,
     impulse: vec3(),
     throwBoost: 1,
+    toss: vec3(),
   };
 }
 

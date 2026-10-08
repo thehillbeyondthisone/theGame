@@ -101,6 +101,43 @@ export const tuning = {
     throwBoost: 1.3,
     flickMinSpeed: 1.0,
   },
+  /** Touch screens: grab the disc low and near, flick it up, and it flies an arc. */
+  toss: {
+    /** Where a fresh disc waits: meters ahead of the eye, and below it. */
+    restAhead: 0.6,
+    restDrop: 0.37,
+    /** A held disc follows the finger this far from where it waits, m. */
+    reach: 0.15,
+    stiffness: 160,
+    dampingRatio: 1,
+    /** Finger speed is measured over this long before the finger lifts, s. */
+    flickWindow: 0.06,
+    /** Flick speeds are in screen heights per second. Slower let-gos just drop the disc. */
+    minFlick: 0.6,
+    minRise: 0.3,
+    /** Launch speed (m/s) = speedBase + speedGain × flick speed, up to maxSpeed. */
+    speedBase: 1.45,
+    speedGain: 0.4,
+    maxSpeed: 4.2,
+    /** Rise per meter of run at launch. */
+    loft: 1.4,
+    /** Sideways lean of the throw per unit of the flick's sideways lean, and its limit. */
+    sideGain: 0.85,
+    maxSide: 1,
+    /** Seconds until an arc joins the one a disc thrown from its resting place would fly. */
+    rejoin: 0.6,
+    /** Lower than real gravity, so the arc is slow enough to read on a small screen. */
+    gravity: 5,
+    /** How far a near-miss is corrected toward a clean arc (0 = none, 1 = always sinks)… */
+    assist: 0.25,
+    /** …in full up to this relative error, fading out by the second value. */
+    assistFull: 0.2,
+    assistFade: 0.45,
+    /** A throw is a miss once it falls this far below the eye, flies this far, or takes this long. */
+    floor: 0.8,
+    range: 3.2,
+    maxFlight: 2.5,
+  },
   hoop: {
     radius: 0.14,
     /** Up to this far off facing the player, so passes need sideways motion too. */

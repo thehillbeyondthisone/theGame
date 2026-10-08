@@ -26,6 +26,7 @@
     "three": "npm:super-three@0.185.0"
   },
   "devDependencies": {
+    "@fontsource/kanit": "^5.3.0",
     "@iwer/devui": "^2.5.0",
     "@iwer/sem": "^2.5.0",
     "@types/three": "0.185.4",

@@ -1,16 +1,15 @@
-import { Raycaster, Vector2, Vector3 } from 'three';
+import { Raycaster, Vector2 } from 'three';
 import { Arbiter } from './input/arbiter';
 import { Tractor } from './input/controller';
 import { MindControl } from './input/mind';
 import { PointerControl } from './input/pointer';
 import { Telekinesis } from './input/telekinesis';
-import { touchAim } from './input/touch-aim';
 import { type Handedness, createInputFrame } from './input/types';
 import { XRReader } from './input/xr-reader';
 import { AudioFeedback } from './platform/audio';
 import { pulse } from './platform/haptics';
 import { loadBest, saveBest } from './platform/records';
-import { type PlayFrame, clampToComfort, makePlayFrame, screenLimits } from './sim/comfort';
+import { type PlayFrame, clampToComfort, makePlayFrame, pointAhead, screenLimits } from './sim/comfort';
 import { createIntent, releasePull } from './sim/intent';
 import { type PlayMode, type ScoreRun, startScoreRun } from './sim/run';
 import { tuning } from './sim/tuning';
@@ -48,7 +47,6 @@ export interface ScreenState {
   scoreRun: ScoreRun;
   best: number;
   newBest: boolean;
-  aim: { x: number; y: number; aligned: boolean } | null;
 }
 
 interface ScheduledPulse {
@@ -90,11 +88,11 @@ export class App {
   private calmVisuals = false;
   private readonly raycaster = new Raycaster();
   private readonly ndc = new Vector2();
-  private readonly projected = new Vector3();
   private best = loadBest();
   private bestBeforeRun = this.best;
   private recorded = false;
-  private readonly aim = { x: 0, y: 0, aligned: false };
+  /** Touch screens flick the disc in an arc; a mouse drags it. */
+  private readonly toss = matchMedia('(any-pointer: coarse)').matches;
   private readonly pointers = new Map<number, { x: number; y: number; touch: boolean }>();
   private readonly pulses: ScheduledPulse[] = [];
   private session: XRSession | null = null;
@@ -153,7 +151,9 @@ export class App {
   play(mode: PlayMode = 'sprint'): void {
     this.enableAudio();
     this.clearScreenInput();
-    this.world = createWorld(this.desktopFrame(), this.options.seed, mode);
+    const frame = this.desktopFrame();
+    const rest = this.toss ? pointAhead(vec3(), frame, tuning.toss.restAhead, tuning.toss.restDrop) : undefined;
+    this.world = createWorld(frame, this.options.seed, mode, rest);
     this.best = Math.max(this.best, loadBest());
     this.bestBeforeRun = this.best;
     this.recorded = false;
@@ -186,7 +186,7 @@ export class App {
   }
 
   setScreenDepth(direction: number): void {
-    if (!this.playing || this.session || this.screenPaused || this.world.scoreRun.phase !== 'playing') return;
+    if (!this.playing || this.session || this.toss || this.screenPaused || this.world.scoreRun.phase !== 'playing') return;
     if (direction === 0 && this.pointers.size === 0) this.pointer.reset();
     if (direction !== 0 && this.depthDirection === 0 && this.pointers.size === 0) {
       // A depth button also works by itself, along the disc's current direction.
@@ -349,6 +349,10 @@ export class App {
         this.audio.rim(e.speed);
         this.options.onScreenReward?.('Rim · steady, try again', false);
         for (const side of ['left', 'right'] as const) this.pulses.push({ at: now, side, intensity: 0.25, ms: 20 });
+      } else if (e.type === 'throw' && this.world.flying) {
+        this.audio.toss(e.speed);
+      } else if (e.type === 'miss' && !e.clipped) {
+        this.options.onScreenReward?.('Missed · flick again', false);
       }
     }
     this.world.events.length = 0;
@@ -411,13 +415,12 @@ export class App {
     this.reticle.update(mode === 'mind', this.mind.target, this.input.head?.pos ?? null, this.mind.focus, this.mindRamp);
 
     this.hud.mesh.visible = this.hudVisible && inPlay && (xr || this.options.screenHud !== false);
-    if (this.hud.mesh.visible) this.hud.draw(now, this.hudLines(xr));
+    if (this.hud.mesh.visible) this.hud.draw(now, this.hudLines(xr), this.session?.frameRate ? this.stats.fps / this.session.frameRate : null);
     if (!xr && this.playing) {
       const scoreRun = this.world.scoreRun;
       this.options.onScreenState?.({ run: this.world.run, level: this.world.level, streak: this.world.streak,
         paused: this.screenPaused, scoreRun, best: this.best,
-        newBest: scoreRun.score > this.bestBeforeRun,
-        aim: this.pointers.size === 1 && this.pointers.values().next().value?.touch && !this.screenPaused && scoreRun.phase === 'playing' ? this.aim : null });
+        newBest: scoreRun.score > this.bestBeforeRun });
     }
   }
 
@@ -471,7 +474,7 @@ export class App {
       if (!p) return;
       p.x = e.clientX;
       p.y = e.clientY;
-      if (this.pointers.size >= 2) {
+      if (this.pointers.size >= 2 && !this.toss) {
         // Two-finger spread pushes the disc away; pinch brings it closer.
         const span = this.span();
         this.wheel += (span - this.pinchSpan) / 40;
@@ -510,11 +513,11 @@ export class App {
     this.depthDirection = 0;
     this.input.pointer.down = false;
     this.input.pointer.depthRate = 0;
-    this.input.pointer.touchAim = false;
     this.pointer.reset();
     releasePull(this.intent);
     this.intent.throwBoost = 1;
     set(this.intent.impulse, 0, 0, 0);
+    set(this.intent.toss, 0, 0, 0);
   }
 
   private span(): number {
@@ -526,29 +529,15 @@ export class App {
     const p = this.input.pointer;
     const first = this.pointers.values().next().value;
     p.down = first !== undefined || this.depthDirection !== 0;
-    p.touchAim = first?.touch === true && this.pointers.size === 1;
+    p.toss = this.toss;
     p.depthRate = this.depthDirection * tuning.pointer.depthSpeed;
     if (first) {
       const rect = this.stage.renderer.domElement.getBoundingClientRect();
-      // Support touching the mouth as well as aiming the marker above a thumb.
-      // Depth assistance still requires a held gesture; there's no unattended scoring.
-      let x = first.x - rect.left;
-      let y = first.y - rect.top;
-      this.projected.set(this.world.hoop.center.x, this.world.hoop.center.y, this.world.hoop.center.z).project(this.stage.camera);
-      const mouthX = (this.projected.x + 1) * rect.width / 2;
-      const mouthY = (1 - this.projected.y) * rect.height / 2;
-      this.aim.aligned = false;
-      if (p.touchAim && p.depthRate === 0 && this.wheel === 0 && this.world.captureRemaining === 0) {
-        const assisted = touchAim(x, y, mouthX, mouthY, rect.width, rect.height);
-        x = assisted.x;
-        y = assisted.y;
-        this.aim.aligned = assisted.aligned;
-      } else if (first.touch) {
-        y -= Math.min(52, rect.height * 0.09);
-      }
-      this.aim.x = Math.max(12, Math.min(rect.width - 12, x));
-      this.aim.y = Math.max(12, Math.min(rect.height - 12, y));
-      this.ndc.set((this.aim.x / rect.width) * 2 - 1, -(this.aim.y / rect.height) * 2 + 1);
+      const x = Math.max(12, Math.min(rect.width - 12, first.x - rect.left));
+      const y = Math.max(12, Math.min(rect.height - 12, first.y - rect.top));
+      p.x = (x - rect.width / 2) / rect.height;
+      p.y = 0.5 - y / rect.height;
+      this.ndc.set((x / rect.width) * 2 - 1, -(y / rect.height) * 2 + 1);
       this.raycaster.setFromCamera(this.ndc, this.stage.camera);
       copy(p.rayOrigin, this.raycaster.ray.origin);
       copy(p.rayDir, this.raycaster.ray.direction);

@@ -21,8 +21,7 @@ export class ScreenControls {
   private readonly clockLabel = this.element('screen-clock-label');
   private readonly best = this.element('screen-best');
   private readonly goal = this.element('screen-goal');
-  private readonly streakFill = this.element('screen-streak-fill');
-  private readonly aim = this.element('screen-aim');
+  private readonly streakPips = [...this.element('screen-streak').children];
   private readonly rewardText = this.element('screen-reward');
   private readonly results = this.element('screen-results');
   private readonly replay = this.element<HTMLButtonElement>('screen-replay');
@@ -84,6 +83,8 @@ export class ScreenControls {
         this.syncDepth();
       });
     });
+    // Flick throws have no depth to adjust.
+    for (const button of this.depthButtons) button.hidden = this.touch;
     window.addEventListener('blur', this.clearDepth);
     window.addEventListener('resize', this.clearDepth);
     window.visualViewport?.addEventListener('resize', this.clearDepth);
@@ -107,31 +108,28 @@ export class ScreenControls {
     this.text(this.goal, run.multiplier < 4
       ? `${run.multiplier * 3 - state.streak} clean ${run.multiplier * 3 - state.streak === 1 ? 'sink' : 'sinks'} → ×${run.multiplier + 1}`
       : '×4 · keep your flow');
-    this.streakFill.style.transform = `scaleX(${run.multiplier === 4 ? 1 : (state.streak % 3) / 3})`;
+    const lit = run.multiplier === 4 ? 3 : state.streak % 3;
+    this.streakPips.forEach((pip, i) => pip.classList.toggle('lit', i < lit));
     this.text(this.pause, state.paused ? 'Resume' : 'Pause');
     const modeText = run.mode === 'sprint' ? 'Free play' : '60s run';
     this.text(this.mode, modeText);
     this.mode.setAttribute('aria-label', `Switch to ${modeText}`);
     const hint = state.paused ? 'Paused · tap Resume when you’re ready'
-      : run.phase === 'ready' ? this.touch ? 'Drag to the cone’s mouth and hold · timer starts on touch' : 'Drag to start · wheel or Push / Pull for depth'
-      : this.touch ? state.aim?.aligned ? 'Aim locked · keep holding to sink' : 'Hold your finger or the marker over the cone’s mouth' : 'Drag to steer · wheel or Push / Pull for depth';
+      : run.phase === 'ready' ? this.touch ? 'Flick the disc up into the cone · timer starts on touch' : 'Drag to start · wheel or Push / Pull for depth'
+      : this.touch ? 'Flick the disc up to throw · flick harder to throw farther' : 'Drag to steer · wheel or Push / Pull for depth';
     this.text(this.hint, hint);
     if (state.paused || run.phase === 'finished') this.clearDepth();
     this.pause.disabled = run.phase !== 'playing';
     this.reset.disabled = run.phase !== 'playing';
     this.mode.disabled = run.phase === 'finished';
     for (const button of this.depthButtons) button.disabled = state.paused || run.phase !== 'playing';
-    this.aim.hidden = !state.aim;
-    if (state.aim) {
-      this.aim.style.transform = `translate(${state.aim.x}px, ${state.aim.y}px)`;
-      this.aim.classList.toggle('aligned', state.aim.aligned);
-    }
     if (run.phase === 'finished' && this.results.hidden) {
       this.text(this.element('result-eyebrow'), state.newBest ? 'New personal best' : 'Run complete');
+      this.element('result-eyebrow').classList.toggle('warm', state.newBest);
       this.text(this.element('result-title'), run.sinks === 0 ? 'Find your flow' : run.score >= 2500 ? 'In the zone' : run.score >= 1000 ? 'Flow found' : 'One more round?');
       this.text(this.element('result-score'), run.score.toLocaleString());
       this.text(this.element('result-detail'), `${run.sinks} sinks · ${run.perfects} perfect · best streak ${run.bestStreak}`);
-      this.text(this.element('result-target'), run.sinks === 0 ? 'Hold your finger or the marker over the cone’s mouth until it sinks.'
+      this.text(this.element('result-target'), run.sinks === 0 ? this.touch ? 'Flick the disc up toward the cone. A harder flick throws it farther.' : 'Drag the disc over the cone’s mouth, then push it in.'
         : state.newBest ? `Your new best: ${state.best.toLocaleString()}. Can you keep a longer streak?`
         : `Personal best ${state.best.toLocaleString()} · ${Math.max(100, state.best - run.score + 100).toLocaleString()} more points to beat it`);
       this.results.hidden = false;

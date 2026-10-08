@@ -13,8 +13,8 @@ These implemented values supersede the proposed scoring values below. Other road
 | Score run | 60 active seconds; starts on first canvas gesture; pauses when the page is hidden |
 | Sink / Perfect | 100 / 200 points; Perfect requires a plane crossing within 35% of mouth radius and no rim contact on that attempt |
 | Streak multiplier | ×2 at 3 clean sinks, ×3 at 6, ×4 at 9; rim/reset breaks streak without removing points |
-| Touch aim | Marker up to 52 CSS px above the finger; small attraction within 38 CSS px (bounded by screen width) |
-| Touch entry | Approach 0.18 m above the mouth, then pull 0.12 m through once within 0.065 m of the approach target; retains radial aiming error |
+| Touch throw | Pick the disc up from 0.6 m ahead and 0.37 m below the eye (it follows the finger up to 0.15 m), then flick up. Finger speed over the last 60 ms, in screen heights per second, sets launch speed: 1.45 + 0.4 × flick m/s (max 4.2) at a rise of 1.4 per meter of run; the flick’s sideways lean steers it |
+| Touch flight | Gravity 5 m/s², no drag, no steering; near-misses are corrected 25% toward a clean arc (full within 20% error, none beyond 45%). A throw that falls 0.8 m below the eye, flies 3.2 m, or lasts 2.5 s is a miss: the streak ends and a fresh disc appears |
 | Personal best | Completed score runs only; stored locally under `the-game-sprint-best-v1`; free play has no deadline |
 | Fixed-step catch-up | Up to 12 steps, covering the 0.1 s frame-time cap; allows 30 fps rendering to keep the timer and simulation at full speed |
 
@@ -92,7 +92,7 @@ Emulated touch verifies capture, scoring, replay, cancellation, simultaneous ste
 | View | 60° vertical; portrait phones widen it so the horizontal view stays ≥ 50° | |
 | Drag spring | 60 /s², ratio 0.9 | |
 | Wheel depth step | 0.1 m per notch | |
-| Touch aim | Center lock within min(28 px, 6.5% of screen width); feather over twice that radius | Accepts either the finger or the marker up to 52 px above it; manual depth overrides assistance |
+| Touch throw | See the current screen gameplay pass above | Values live under `toss` in `src/sim/tuning.ts` |
 | Throw on release | 1.3 × disc velocity | |
 
 ## Capture (M1)

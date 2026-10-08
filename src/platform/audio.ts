@@ -15,6 +15,11 @@ export class AudioFeedback {
     this.tone(1310, 1040, 0.09, volume * 0.34, 'sine');
   }
 
+  /** A short rising breath as a flicked disc leaves the hand. */
+  toss(speed: number): void {
+    this.tone(190, 190 + speed * 70, 0.16, 0.02, 'triangle');
+  }
+
   sink(streak: number, perfect = false, multiplier = 1): void {
     this.tone(68, 43, 0.2, 0.09, 'sine');
     this.tone(220, 220, 0.42, 0.032, 'sine');

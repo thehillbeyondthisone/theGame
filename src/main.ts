@@ -1,3 +1,5 @@
+import '@fontsource/kanit/latin-500-italic.css';
+import '@fontsource/kanit/latin-600-italic.css';
 import './ui/landing.css';
 import { App } from './app';
 import { ScreenControls } from './ui/screen-controls';

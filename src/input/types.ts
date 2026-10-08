@@ -61,8 +61,11 @@ export interface PointerFrame {
   rayDir: Vec3;
   /** Accumulated wheel notches since last frame; + is away from you. */
   wheel: number;
-  /** One-finger touch aim gets gradual depth assistance near the funnel. */
-  touchAim: boolean;
+  /** Touch-screen play: the disc is flicked into an arc instead of dragged to the funnel. */
+  toss: boolean;
+  /** Where the pointer is, in screen heights from the view's center; +x right, +y up. */
+  x: number;
+  y: number;
   /** Manual depth velocity from the screen's Push/Pull controls, m/s. */
   depthRate: number;
 }
@@ -103,6 +106,6 @@ export function createInputFrame(): InputFrame {
     head: null,
     left: { hand: handFrame('left'), controller: controllerFrame('left') },
     right: { hand: handFrame('right'), controller: controllerFrame('right') },
-    pointer: { down: false, rayOrigin: vec3(), rayDir: vec3(0, 0, -1), wheel: 0, touchAim: false, depthRate: 0 },
+    pointer: { down: false, rayOrigin: vec3(), rayDir: vec3(0, 0, -1), wheel: 0, toss: false, x: 0, y: 0, depthRate: 0 },
   };
 }

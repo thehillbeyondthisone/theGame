@@ -30,7 +30,7 @@ See the [preview notes and artwork provenance](docs/reference/enterprise-preview
 - **Hand tracking:** open-palm pull, pinch-and-release throw, and palm shove.
 - **Controllers:** trigger tractor beam, stick depth control, throws, and haptic feedback.
 - **60-second flow run:** the timer starts on your first drag. Sinks earn 100 points, centered entries without a rim hit earn 200, and every three consecutive clean sinks raises the multiplier up to ×4. Rim hits break the streak without removing points. Finish to save your personal best on this browser, then replay in one tap.
-- **Mobile:** drag anywhere, then hold your finger or the marker above it over the cone’s mouth. The marker locks onto the center nearby; keep holding to approach and sink. Push/Pull buttons or a two-finger pinch give manual depth control. Pause and Reset are on screen; leaving the page pauses a run until you resume.
+- **Mobile:** pick the disc up from the bottom of the screen and flick it up at the cone. A harder flick throws farther, and the flick’s lean steers the throw; the disc flies an arc and a miss brings a fresh one. Pause and Reset are on screen; leaving the page pauses a run until you resume.
 - **Free play:** the same layouts and feedback without a timer. Switch between free play and score runs with the on-screen mode button (switching starts a fresh session).
 - **Desktop:** drag the disc; use the wheel or Push/Pull for depth.
 - **Ten layouts:** funnels become smaller and begin to move. A sink plays a capture spiral before the next level.
@@ -76,7 +76,7 @@ You can also use the npm scripts directly:
 | Mind (default in XR) | Look toward the destination. Hold near the funnel mouth to advance; lean in/back for manual depth. |
 | Hands | Open palm to pull, pinch to hold, release while moving to throw, or shove with the palm. |
 | Controllers | Trigger to pull, stick to change depth, release during a flick to throw. A/X resets; B/Y toggles stats. |
-| Mobile | Drag with one finger; hold your finger or the marker above it over the funnel mouth. Keep holding when the aim locks to approach and sink. Hold Push/Pull or use a two-finger pinch for manual depth. On-screen Pause/Reset. |
+| Mobile | Flick the disc up toward the funnel: harder flicks fly farther, and a flick that leans left or right throws that way. A miss ends the streak and brings a fresh disc. On-screen Pause/Reset. |
 | Desktop | Drag. Wheel or Push/Pull changes depth. `R` resets; `H` toggles stats; Space pauses. |
 
 ## How AI was used

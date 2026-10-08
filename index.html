@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#100b14" />
+    <meta name="theme-color" content="#07060d" />
     <meta name="description" content="A gift. Put it on." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>THE GAME</title>
@@ -18,7 +18,7 @@
         <button id="free-play" class="secondary" type="button" hidden>Free play · no timer</button>
         <a id="open-quest" class="button secondary" rel="noopener" hidden>Open on Meta Quest</a>
       </div>
-      <p id="screen-intro">Guide the disc. Find your flow.<br />Perfect sinks + clean streaks = bigger scores.</p>
+      <p id="screen-intro">Flick the disc. Find your flow.<br />Perfect sinks + clean streaks = bigger scores.</p>
       <p id="status" role="status"></p>
       <p class="notice">
         Photosensitivity notice: this game uses soft, slow pulses of light and never strobes. Take a break if
@@ -39,13 +39,14 @@
       </div>
       <div class="run-progress">
         <p id="screen-progress">Level 1 / 10 · 0 clean</p>
-        <p id="screen-goal">3 clean sinks → ×2</p>
-        <div class="streak-track" aria-hidden="true"><div id="screen-streak-fill"></div></div>
+        <div class="streak">
+          <span id="screen-streak" class="pips" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p id="screen-goal">3 clean sinks → ×2</p>
+        </div>
       </div>
-      <div id="screen-aim" aria-hidden="true" hidden></div>
       <p id="screen-reward" role="status" aria-live="polite" aria-atomic="true"></p>
       <div class="screen-bottom">
-        <p id="screen-hint">Drag to the cone’s mouth and hold</p>
+        <p id="screen-hint">Flick the disc up into the cone</p>
         <div class="depth-controls" aria-label="Manual depth">
           <button id="screen-pull" type="button" aria-label="Pull disc closer" aria-describedby="screen-hint">Pull <span>closer</span></button>
           <button id="screen-mode" type="button" aria-label="Switch to free play">Free play</button>

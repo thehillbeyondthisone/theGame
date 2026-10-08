@@ -1,7 +1,7 @@
 import { type PlayFrame, clampToComfort, toWorld } from './comfort';
 import { type Rng, range } from './rng';
 import { tuning } from './tuning';
-import { type Vec3, addScaled, distance, dot, normalize, set, sub, vec3 } from './vec3';
+import { type Vec3, addScaled, copy, distance, dot, normalize, set, sub, vec3 } from './vec3';
 
 /**
  * The funnel's mouth uses this plane for its capture opening. The simulation
@@ -95,8 +95,13 @@ export function placeHoop(hoop: Hoop, frame: PlayFrame, rng: Rng, avoid: Vec3, l
 
 /** Triangle-wave movement keeps levels deterministic and easy to lead by eye. */
 export function stepHoop(hoop: Hoop, frame: PlayFrame, step: number): void {
-  if (hoop.sway === 0) return;
+  if (hoop.sway !== 0) hoopCenterAt(hoop.center, hoop, frame, step);
+}
+
+/** Where the mouth's center is at a given simulation step. */
+export function hoopCenterAt(out: Vec3, hoop: Hoop, frame: PlayFrame, step: number): Vec3 {
+  if (hoop.sway === 0) return copy(out, hoop.center);
   const phase = (step % hoop.swayPeriod) / hoop.swayPeriod;
   const triangle = phase < 0.5 ? -1 + 4 * phase : 3 - 4 * phase;
-  addScaled(hoop.center, hoop.home, frame.right, hoop.sway * triangle);
+  return addScaled(out, hoop.home, frame.right, hoop.sway * triangle);
 }

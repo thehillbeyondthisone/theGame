@@ -1,16 +1,17 @@
-import { clampToComfort, MAX_DIST, MIN_DIST } from '../sim/comfort';
+import { clampToComfort } from '../sim/comfort';
 import type { Intent } from '../sim/intent';
+import { flickToToss } from '../sim/toss';
 import { tuning } from '../sim/tuning';
-import { addScaled, clamp, copy, distance, dot, length, lerp, scale, set, sub, vec3 } from '../sim/vec3';
+import { add, addScaled, clamp, clampLength, copy, distance, length, lerp, scale, set, sub, vec3 } from '../sim/vec3';
 import type { World } from '../sim/world';
 import type { InputFrame } from './types';
 
 const tmp = vec3();
 
 /**
- * Phone/desktop fallback: drag the disc with mouse or touch. The wheel (or a
- * two-finger pinch) moves it nearer or further; letting go mid-flick throws.
- * One-finger touch supplies depth near the mouth, with Push/Pull as an override.
+ * Phone/desktop fallback. With a mouse: drag the disc, the wheel (or Push/Pull)
+ * moves it nearer or further, and letting go mid-flick throws. On a touch screen:
+ * pick the disc up from where it waits and flick it up to throw it in an arc.
  */
 export class PointerControl {
   held = false;
@@ -18,14 +19,15 @@ export class PointerControl {
   readonly target = vec3();
   private readonly targetVel = vec3();
   private readonly prevTarget = vec3();
-  private recovering = false;
-  private sinking = false;
+  private toss = false;
+  /** Recent finger positions, newest first, for measuring a flick. */
+  private readonly trail = Array.from({ length: 8 }, () => ({ time: 0, x: 0, y: 0 }));
+  private trailLength = 0;
 
   /** Interrupted gestures must release without producing a flick. */
   reset(): void {
     this.held = false;
-    this.recovering = false;
-    this.sinking = false;
+    this.trailLength = 0;
     set(this.targetVel, 0, 0, 0);
   }
 
@@ -34,50 +36,33 @@ export class PointerControl {
     const t = tuning.pointer;
     const dt = input.dt;
     const wasHeld = this.held;
-    this.held = p.down;
+    this.toss = p.toss;
+    // A thrown disc is out of reach until the next one appears.
+    this.held = p.down && !(p.toss && (world.flying || world.captureRemaining > 0));
 
     if (this.held && !wasHeld) {
-      this.depth = clamp(distance(p.rayOrigin, world.disc.pos), 0.3, 3);
+      this.depth = p.toss ? distance(p.rayOrigin, world.rest) : clamp(distance(p.rayOrigin, world.disc.pos), 0.3, 3);
       set(this.targetVel, 0, 0, 0);
-      this.recovering = false;
-      this.sinking = false;
+      this.trailLength = 0;
     }
     if (this.held) {
-      let mouthApproach = false;
-      this.depth = clamp(this.depth + p.wheel * t.wheelStep + p.depthRate * dt, 0.3, 3);
-      if (p.touchAim && p.wheel === 0 && p.depthRate === 0 && world.captureRemaining === 0) {
-        const m = tuning.mind;
-        const mouthDistance = distance(p.rayOrigin, world.hoop.center);
-        sub(tmp, world.hoop.center, p.rayOrigin);
-        const alignment = mouthDistance > 0 ? dot(p.rayDir, scale(tmp, tmp, 1 / mouthDistance)) : 0;
-        const aim = clamp((alignment - m.depthAimOuterCos) / (m.depthAimInnerCos - m.depthAimOuterCos), 0, 1);
-        if (aim > 0) {
-          const behind = dot(sub(tmp, world.disc.pos, world.hoop.center), world.hoop.normal);
-          if (behind < -m.recoverBehind) this.recovering = true;
-          else if (behind > m.recoverAhead) this.recovering = false;
-          const goal = clamp(mouthDistance + (this.recovering ? -m.recoverDepth : m.depthThroughMouth), MIN_DIST, MAX_DIST);
-          this.depth += clamp(goal - this.depth, -m.depthSpeed * dt * aim, m.depthSpeed * dt * aim);
-          if (aim > 0.5 && !this.recovering) {
-            // A straight ray toward the mouth can cross its tilted rim before
-            // lateral steering catches up. Approach above the opening, then sink.
-            // Keep the player's radial aim error so accurate entries earn Perfect.
-            addScaled(this.target, p.rayOrigin, p.rayDir, mouthDistance);
-            const above = dot(sub(tmp, this.target, world.hoop.center), world.hoop.normal);
-            addScaled(this.target, this.target, world.hoop.normal, -above + (this.sinking ? -0.12 : 0.18));
-            if (!this.sinking && distance(world.disc.pos, this.target) < 0.065) this.sinking = true;
-            this.depth = distance(p.rayOrigin, this.target);
-            mouthApproach = true;
-          } else this.sinking = false;
-        } else this.sinking = false;
-      } else this.sinking = false;
-      if (world.captureRemaining > 0) this.recovering = false;
-      if (!mouthApproach) addScaled(this.target, p.rayOrigin, p.rayDir, this.depth);
+      if (p.toss) this.remember(input.time, p.x, p.y);
+      else this.depth = clamp(this.depth + p.wheel * t.wheelStep + p.depthRate * dt, 0.3, 3);
+      addScaled(this.target, p.rayOrigin, p.rayDir, this.depth);
+      // The disc is thrown from the hand, not carried to the funnel.
+      if (p.toss) add(this.target, world.rest, clampLength(tmp, sub(tmp, this.target, world.rest), tuning.toss.reach));
       clampToComfort(this.target, this.target, world.frame);
       if (wasHeld && dt > 0) {
         scale(tmp, sub(tmp, this.target, this.prevTarget), 1 / dt);
         lerp(this.targetVel, this.targetVel, tmp, Math.min(1, dt * 15));
       }
       copy(this.prevTarget, this.target);
+    } else if (p.toss) {
+      if (wasHeld) this.flick(world, intent);
+      // Until it's picked up, the disc waits where it appeared.
+      copy(this.target, world.rest);
+      set(this.targetVel, 0, 0, 0);
+      return !world.flying;
     } else if (wasHeld && length(world.disc.vel) >= t.flickMinSpeed) {
       intent.throwBoost = t.throwBoost;
     }
@@ -85,11 +70,33 @@ export class PointerControl {
   }
 
   drive(intent: Intent): void {
-    const t = tuning.pointer;
+    const t = this.toss ? tuning.toss : tuning.pointer;
     intent.mode = 'pointer';
     copy(intent.target, this.target);
-    scale(intent.targetVel, this.targetVel, t.lead);
+    scale(intent.targetVel, this.targetVel, tuning.pointer.lead);
     intent.stiffness = t.stiffness;
     intent.dampingRatio = t.dampingRatio;
+  }
+
+  private remember(time: number, x: number, y: number): void {
+    const sample = this.trail.pop()!;
+    sample.time = time;
+    sample.x = x;
+    sample.y = y;
+    this.trail.unshift(sample);
+    this.trailLength = Math.min(this.trailLength + 1, this.trail.length);
+  }
+
+  /** Throws with the finger's speed just before it lifted; a finger that had stopped drops the disc. */
+  private flick(world: World, intent: Intent): void {
+    const newest = this.trail[0]!;
+    let oldest = newest;
+    for (let i = 1; i < this.trailLength; i++) {
+      if (newest.time - this.trail[i]!.time > tuning.toss.flickWindow) break;
+      oldest = this.trail[i]!;
+    }
+    const span = newest.time - oldest.time;
+    if (span <= 0) return;
+    flickToToss(intent.toss, (newest.x - oldest.x) / span, (newest.y - oldest.y) / span, world.frame);
   }
 }
